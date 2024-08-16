@@ -51,6 +51,7 @@ token_type=char
     --lang "${tgt_lang}" \
     --tgt_case ts \
     --asr_config "${asr_config}" \
+    --feats_normalize utterance_mvn \
     --inference_config "${inference_config}" \
     --train_set "${train_set}" \
     --valid_set "${train_dev}" \

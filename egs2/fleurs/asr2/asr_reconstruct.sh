@@ -1206,7 +1206,7 @@ if [ ${stage} -le 10 ] && [ ${stop_stage} -ge 10 ] && ! [[ " ${skip_stages} " =~
     _feats_type="$(<${_asr_train_dir}/feats_type)"
     _audio_format="$(cat ${_asr_train_dir}/audio_format 2>/dev/null || echo ${audio_format})"
     if [ "${_feats_type}" = raw ]; then
-        _scp=wav_resyn_EnCodec.scp
+        _scp=wav_resyn_${codec_choice}.scp
         if [[ "${_audio_format}" == *ark* ]]; then
             _type=kaldi_ark
         else
@@ -1325,7 +1325,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
     _feats_type="$(<${_asr_train_dir}/feats_type)"
     _audio_format="$(cat ${_asr_train_dir}/audio_format 2>/dev/null || echo ${audio_format})"
     if [ "${_feats_type}" = raw ]; then
-        _scp=wav_resyn_EnCodec.scp
+        _scp=wav_resyn_${codec_choice}.scp
         # "sound" supports "wav", "flac", etc.
         if [[ "${_audio_format}" == *ark* ]]; then
             _type=kaldi_ark
@@ -1548,7 +1548,7 @@ if [ ${stage} -le 12 ] && [ ${stop_stage} -ge 12 ] && ! [[ " ${skip_stages} " =~
         _feats_type="$(<${_data}/feats_type)"
         _audio_format="$(cat ${_data}/audio_format 2>/dev/null || echo ${audio_format})"
         if [ "${_feats_type}" = raw ]; then
-            _scp=wav_resyn_EnCodec.scp
+            _scp=wav_resyn_${codec_choice}.scp
             if [[ "${audio_format}" == *ark* ]]; then
                 _type=kaldi_ark
             elif [[ "${_audio_format}" == *multi* ]]; then

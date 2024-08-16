@@ -1,8 +1,10 @@
 set -e
 set -u
 set -o pipefail
-source /home/stan/miniconda3/envs/espnet_codec/etc/profile.d/conda.sh
-conda activate /home/stan/miniconda3/envs/espnet_codec
+conda_root=$(conda info --base)
+env_name=espnet_codec
+source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
+conda activate ${conda_root}/envs/${env_name}
 
 log() {
     local fname=${BASH_SOURCE[1]##*/}
@@ -14,8 +16,14 @@ mkdir -p ${result_dir}
 langs=("ceb_ph" "fil_ph" "gu_in" "jv_id" "kea_cv" "kam_ke" "kn_in" "lo_la" "ln_cd" "luo_ke" "mi_nz" "ny_mw" "sn_zw" "sd_in" "umb_ao" "wo_sn")
 # langs=("fil_ph")
 dsets=("dev" "test")
-fs=16000
-codec_choice=ESPnet
+if [ ${codec_choice} == "ESPnet" ]; then
+    fs=16000
+elif [ ${codec_choice} == "EnCodec" ]; then
+    fs=24000
+else
+    echo "Unknown codec choice"
+    exit 1
+fi
 for set in "${dsets[@]}" ;
 do
     for lang in "${langs[@]}"
