@@ -636,7 +636,7 @@ log "Skipped stages: ${skip_stages}"
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ] && ! [[ " ${skip_stages} " =~ [[:space:]]1[[:space:]] ]]; then
     log "Stage 1: Data preparation for data/${train_set}, data/${valid_set}, etc."
     # [Task dependent] Need to create data.sh for new corpus
-    local/data.sh ${local_data_opts} --lang "${lang}" 
+    local/data.sh ${local_data_opts}  
 fi
 
 
@@ -893,30 +893,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
         fi
 
     elif [ "${tokenization_choice}" == "codec" ]; then
-        for dset in "${train_set}" ${train_sp_sets}; do
+        for dset in "${train_set}" ${train_sp_sets} "${_dev_set}" ${test_sets} ; do
             log "Stage 5a: Perform codec tokenization with codec choice ${codec_choice} .. "
-
-            # NOTE (Jinchuan) bias=2, reserve two slots for <blk> and <unk>
-            scripts/feats/codec_tokenization.sh \
-                --src_dir ${data_audio}/${dset} \
-                --tgt_dir ${data_feats}/${dset} \
-                --codec_fs ${fs} \
-                --dump_audio false \
-                --file_name wav.scp \
-                --nj ${nj} \
-                --bias 2 \
-                --codec_choice ${codec_choice} \
-                --checkpoint_path ${codec_checkpoint_path} \
-                --config_path ${codec_config_path} \
-                --hf_model_tag ${codec_hf_model_tag}
-
-                cp ${data_feats}/${dset}/wav.scp ${data_feats}/${dset}/text.${src_case}.${src_lang}
-                cp ${data_audio}/${dset}/text ${data_feats}/${dset}/text.${tgt_case}.${tgt_lang}
-                cp ${data_audio}/${dset}/utt2spk    ${data_feats}/${dset}/utt2spk
-        done
-        for dset in "${_dev_set}" ${test_sets}; do
-            log "Stage 5a: Perform codec tokenization with codec choice ${codec_choice} .. "
-            log "Peform waveform reconstruction for ${dset} "
 
             # NOTE (Jinchuan) bias=2, reserve two slots for <blk> and <unk>
             scripts/feats/codec_tokenization.sh \
