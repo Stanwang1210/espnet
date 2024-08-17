@@ -52,3 +52,4 @@ If using the conda, specify the `env_name` in
 2. In `asr2.sh`, set `--dump_audio` to `true`
 3. In `asr_reconstruct.sh`, change `ref_text_files_str` from `"text "` to `"text.${tgt_case}.${lang}` "
 4. In `asr_reconstruct.sh` stage 10-12, change `_scp` from `wav.scp` to `wav_resyn_$${codec_choice}.scp`
+5. In `asr2.sh` and `asr_reconstruct.sh`, change `lm_train.txt` and `token_train.txt` to `${lang}_lm_train.txt` and `${lang}_token_train.txt`.

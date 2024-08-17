@@ -636,7 +636,7 @@ log "Skipped stages: ${skip_stages}"
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ] && ! [[ " ${skip_stages} " =~ [[:space:]]1[[:space:]] ]]; then
     log "Stage 1: Data preparation for data/${train_set}, data/${valid_set}, etc."
     # [Task dependent] Need to create data.sh for new corpus
-    local/data.sh ${local_data_opts}  
+    local/data.sh ${local_data_opts}
 fi
 
 
@@ -893,7 +893,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
         fi
 
     elif [ "${tokenization_choice}" == "codec" ]; then
-        for dset in "${train_set}" ${train_sp_sets} "${_dev_set}" ${test_sets} ; do
+        for dset in "${train_set}" ${train_sp_sets} "${_dev_set}" ${test_sets}; do
+        # for dset in "${train_set}" ; do
             log "Stage 5a: Perform codec tokenization with codec choice ${codec_choice} .. "
 
             # NOTE (Jinchuan) bias=2, reserve two slots for <blk> and <unk>
@@ -914,10 +915,6 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
                 cp ${data_audio}/${dset}/text ${data_feats}/${dset}/text.${tgt_case}.${tgt_lang}
                 cp ${data_audio}/${dset}/utt2spk    ${data_feats}/${dset}/utt2spk
         done
-        
-        if "${eval_valid_set}"; then
-            cp -r ${data_feats}/org/${valid_set} ${data_feats}/
-        fi
 
         if [ -n "${speed_perturb_factors}" ]; then
             _dirs="${data_feats}/${train_set} "
@@ -958,7 +955,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ] && ! [[ " ${skip_stages} " =~ [
     fi
     if [ "${feats_type}" = raw ]; then
         # NOTE(Jinchuan): data prep with codec tokenization has been done. Skip this part
-        if [ "${tokenization_choice}" == "codec"]; then
+        if [ "${tokenization_choice}" == "codec" ]; then
             continue
         fi
         log "Stage 6: ${data_extract} -> ${data_feats}"
@@ -989,7 +986,7 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ] && ! [[ " ${skip_stages} " =~ [
     for lm_txt in ${lm_train_text[@]}; do
         suffix=$(echo "$(basename ${lm_txt})" | sed 's/text//')
         <${lm_txt} awk -v suffix=${suffix} ' { if( NF != 1 ) {$1=$1 suffix; print $0; }} '
-    done > "${data_feats}/lm_train.txt"
+    done > "${data_feats}/${lang}_lm_train.txt"
 fi
 
 
@@ -1041,13 +1038,13 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
         _opts="--non_linguistic_symbols ${nlsyms_txt}"
 
         # shellcheck disable=SC2002
-        cat ${tgt_bpe_train_text} | cut -f 2- -d" "  > "${data_feats}"/token_train.txt
+        cat ${tgt_bpe_train_text} | cut -f 2- -d" "  > "${data_feats}"/${lang}_token_train.txt
 
         # The first symbol in token_list must be "<blank>" and the last must be also sos/eos:
         # 0 is reserved for CTC-blank for ASR and also used as ignore-index in the other task
         ${python} -m espnet2.bin.tokenize_text  \
             --token_type "${tgt_token_type}" \
-            --input "${data_feats}/token_train.txt" --output "${tgt_token_list}" ${_opts} \
+            --input "${data_feats}/${lang}_token_train.txt" --output "${tgt_token_list}" ${_opts} \
             --field 1- \
             --cleaner "${cleaner}" \
             --g2p "${g2p}" \
@@ -1063,10 +1060,10 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
 
     # Create word-list for word-LM training
     if ${use_word_lm} && [ "${tgt_token_type}" != word ]; then
-        log "Generate word level token_list from ${data_feats}/lm_train.txt"
+        log "Generate word level token_list from ${data_feats}/${lang}_lm_train.txt"
         ${python} -m espnet2.bin.tokenize_text \
             --token_type word \
-            --input "${data_feats}/lm_train.txt" --output "${lm_token_list}" \
+            --input "${data_feats}/${lang}_lm_train.txt" --output "${lm_token_list}" \
             --field 2- \
             --cleaner "${cleaner}" \
             --g2p "${g2p}" \
@@ -1117,13 +1114,13 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
             _opts="--non_linguistic_symbols ${nlsyms_txt}"
 
             # shellcheck disable=SC2002
-            cat ${src_bpe_train_text} | tr '\t' ' ' | cut -f 2- -d" "  > "${data_feats}"/token_train_${src_lang}.txt
+            cat ${src_bpe_train_text} | tr '\t' ' ' | cut -f 2- -d" "  > "${data_feats}"/${lang}_token_train_${src_lang}.txt
 
             # The first symbol in token_list must be "<blank>" and the last must be also sos/eos:
             # 0 is reserved for CTC-blank for ASR and also used as ignore-index in the other task
             ${python} -m espnet2.bin.tokenize_text  \
                 --token_type "${src_token_type}" \
-                --input "${data_feats}/token_train_${src_lang}.txt" --output "${src_token_list}" ${_opts} \
+                --input "${data_feats}/${lang}_token_train_${src_lang}.txt" --output "${src_token_list}" ${_opts} \
                 --field 1- \
                 --cleaner "${cleaner}" \
                 --g2p "${g2p}" \
@@ -1152,7 +1149,7 @@ fi
 
 
 if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ] && ! [[ " ${skip_stages} " =~ [[:space:]]8[[:space:]] ]]; then
-    log "Stage 8: LM collect stats: train_set=${data_feats}/lm_train.txt, dev_set=${lm_dev_text}"
+    log "Stage 8: LM collect stats: train_set=${data_feats}/${lang}_lm_train.txt, dev_set=${lm_dev_text}"
 
     _opts=
     if [ -n "${lm_config}" ]; then
@@ -1165,9 +1162,9 @@ if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ] && ! [[ " ${skip_stages} " =~ [
     _logdir="${lm_stats_dir}/logdir"
     mkdir -p "${_logdir}"
     # Get the minimum number among ${nj} and the number lines of input files
-    _nj=$(min "${nj}" "$(<${data_feats}/lm_train.txt wc -l)" "$(<${lm_dev_text} wc -l)")
+    _nj=$(min "${nj}" "$(<${data_feats}/${lang}_lm_train.txt wc -l)" "$(<${lm_dev_text} wc -l)")
 
-    key_file="${data_feats}/lm_train.txt"
+    key_file="${data_feats}/${lang}_lm_train.txt"
     split_scps=""
     for n in $(seq ${_nj}); do
         split_scps+=" ${_logdir}/train.${n}.scp"
@@ -1202,7 +1199,7 @@ if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ] && ! [[ " ${skip_stages} " =~ [
             --non_linguistic_symbols "${nlsyms_txt}" \
             --cleaner "${cleaner}" \
             --g2p "${g2p}" \
-            --train_data_path_and_name_and_type "${data_feats}/lm_train.txt,text,text" \
+            --train_data_path_and_name_and_type "${data_feats}/${lang}_lm_train.txt,text,text" \
             --valid_data_path_and_name_and_type "${lm_dev_text},text,text" \
             --train_shape_file "${_logdir}/train.JOB.scp" \
             --valid_shape_file "${_logdir}/dev.JOB.scp" \
@@ -1229,7 +1226,7 @@ fi
 
 
 if [ ${stage} -le 9 ] && [ ${stop_stage} -ge 9 ] && ! [[ " ${skip_stages} " =~ [[:space:]]9[[:space:]] ]]; then
-    log "Stage 9: LM Training: train_set=${data_feats}/lm_train.txt, dev_set=${lm_dev_text}"
+    log "Stage 9: LM Training: train_set=${data_feats}/${lang}_lm_train.txt, dev_set=${lm_dev_text}"
 
     _opts=
     if [ -n "${lm_config}" ]; then
@@ -1247,7 +1244,7 @@ if [ ${stage} -le 9 ] && [ ${stop_stage} -ge 9 ] && ! [[ " ${skip_stages} " =~ [
         if [ ! -f "${_split_dir}/.done" ]; then
             rm -f "${_split_dir}/.done"
             ${python} -m espnet2.bin.split_scps \
-                --scps "${data_feats}/lm_train.txt" "${lm_stats_dir}/train/text_shape.${lm_token_type}" \
+                --scps "${data_feats}/${lang}_lm_train.txt" "${lm_stats_dir}/train/text_shape.${lm_token_type}" \
                 --num_splits "${num_splits_lm}" \
                 --output_dir "${_split_dir}"
             touch "${_split_dir}/.done"
@@ -1255,12 +1252,12 @@ if [ ${stage} -le 9 ] && [ ${stop_stage} -ge 9 ] && ! [[ " ${skip_stages} " =~ [
             log "${_split_dir}/.done exists. Spliting is skipped"
         fi
 
-        _opts+="--train_data_path_and_name_and_type ${_split_dir}/lm_train.txt,text,text "
+        _opts+="--train_data_path_and_name_and_type ${_split_dir}/${lang}_lm_train.txt,text,text "
         _opts+="--train_shape_file ${_split_dir}/text_shape.${lm_token_type} "
         _opts+="--multiple_iterator true "
 
     else
-        _opts+="--train_data_path_and_name_and_type ${data_feats}/lm_train.txt,text,text "
+        _opts+="--train_data_path_and_name_and_type ${data_feats}/${lang}_lm_train.txt,text,text "
         _opts+="--train_shape_file ${lm_stats_dir}/train/text_shape.${lm_token_type} "
     fi
 
@@ -1324,9 +1321,9 @@ fi
 
 
 if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~ [[:space:]]11[[:space:]] ]]; then
-    log "Stage 11: Ngram Training: train_set=${data_feats}/lm_train.txt"
+    log "Stage 11: Ngram Training: train_set=${data_feats}/${lang}_lm_train.txt"
     mkdir -p ${ngram_exp}
-    cut -f 2- -d " " ${data_feats}/lm_train.txt | lmplz -S "20%" --discount_fallback -o ${ngram_num} - >${ngram_exp}/${ngram_num}gram.arpa
+    cut -f 2- -d " " ${data_feats}/${lang}_lm_train.txt | lmplz -S "20%" --discount_fallback -o ${ngram_num} - >${ngram_exp}/${ngram_num}gram.arpa
     build_binary -s ${ngram_exp}/${ngram_num}gram.arpa ${ngram_exp}/${ngram_num}gram.bin
 fi
 

@@ -4,9 +4,9 @@
 langs=("ceb_ph" "fil_ph" "gu_in" "jv_id" "kea_cv" "kam_ke" "kn_in" "lo_la" "ln_cd" "luo_ke" "mi_nz" "ny_mw" "sn_zw" "sd_in" "umb_ao" "wo_sn")
 current_date=$(date +%Y-%m-%d)
 task=asr
-tag=run_prepare_${task}_codec
 
 codec_choice=ESPnet
+tag=run_prepare_${task}_codec_${codec_choice}
 
 if [ ${codec_choice} == "ESPnet" ]; then
     fs=16000
