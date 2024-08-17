@@ -1,0 +1,7 @@
+*dump*
+data
+downloads
+*result*
+*checkpoint*
+slurm_logs
+*.csv
