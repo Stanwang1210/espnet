@@ -1,15 +1,10 @@
-corelm: multiscale
+corelm: ar_delay
 corelm_conf:
     share_emb: false
     qk_norm: true
-    # global transformer
-    g_att_unit: 512
-    g_head: 8
-    g_layer: 22
-    # local transformer
-    l_att_unit: 384
-    l_head: 6
-    l_layer: 6
+    att_unit: 512
+    head: 8
+    layer: 24
 
 # Dataloader
 batch_type: numel

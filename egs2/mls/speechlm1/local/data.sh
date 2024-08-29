@@ -10,7 +10,7 @@
 source ./scripts/utils/simple_dict.sh
 
 # general configuration
-stage=1       # start from 0 if you need to start from data preparation
+stage=0       # start from 0 if you need to start from data preparation
 stop_stage=100
 SECONDS=0
 lang=all  # if set as specific language, only download that language

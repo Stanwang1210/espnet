@@ -5,32 +5,68 @@ set -e
 set -u
 set -o pipefail
 
-lang="en" 
+lang=$1
+stage=$2
+stop_stage=$3 
+codec_choice=${4:-"SoundStream"}
+ngpu=${5:-4}
 data_split="full" # one of full 1h 10h
 local_data_opts="--lang ${lang} --data_split ${data_split}"
 
 train_set="mls_${lang}_train"
 valid_set="mls_${lang}_dev"
-test_sets=""
+test_sets="mls_${lang}_dev mls_${lang}_test"
 
-bpe_opts="--bpemode huggingface --bpemodel allenai/OLMo-1B-hf"
-codec_opts="--codec_choice ESPnet --codec_hf_model_tag espnet/amuse_speech_soundstream_16k"
+expdir=exp_ar_tts
+bpe_opts="--nbpe 200"
+train_config=conf/train_valle.yaml
+task="tts"
+data_name="mls"
+data_combo_name="${task}_${data_name}_${lang}"
+codec_opts="--codec_choice ESPnet "
+inference_nj=4
 
+if [ ${codec_choice} == "SoundStream" ]; then
+    fs=16000
+    codec_opts+=" --codec_hf_model_tag espnet/libritts_soundstream16k"
+    inference_config=conf/decode_espnet_libri_soundstream.yaml
+elif [ ${codec_choice} == "EnCodec" ]; then
+    fs=16000
+    codec_opts+=" --codec_hf_model_tag espnet/libritts_encodec_16k"
+    inference_config=conf/decode_espnet_libri_encodec.yaml
+elif [ ${codec_choice} == "SoundStream_amuse" ]; then
+    fs=16000
+    codec_opts+=" --codec_hf_model_tag espnet/amuse_soundstream16k"
+    inference_config=conf/decode_espnet_amuse_soundstream.yaml
+elif [ ${codec_choice} == "EnCodec_amuse" ]; then
+    fs=16000
+    codec_opts+=" --codec_hf_model_tag espnet/amuse_encodec_16k"
+    inference_config=conf/decode_espnet_amuse_encodec.yaml
+
+else
+    echo "Unknown codec choice"
+    exit 1
+fi
 # NOTE(Jinchuan): This script is only to prepare data. End at stage 5
 ./speechlm.sh \
-    --stop_stage 5 \
+    --stage ${stage} \
+    --stop_stage ${stop_stage} \
     --local_data_opts "${local_data_opts}" \
-    --task "bpe_tts" \
-    --data_name mlsen \
-    --fs 16000 \
-    --ngpu 8 \
-    --nj 88 \
-    --train_config conf/train_foo.yaml \
+    --task ${task} \
+    --expdir ${expdir} \
+    --data_name ${data_name} \
+    --data_combo_name "${data_combo_name}" \
+    --fs ${fs} \
+    --ngpu ${ngpu} \
+    --nj 8 \
+    --inference_nj ${inference_nj} \
+    --gpu_inference true \
+    --cleaner None \
+    --train_config ${train_config} \
     --audio_format "flac.ark" \
     --train_set "${train_set}" \
     --valid_set "${valid_set}" \
     --test_sets "${test_sets}" \
     --min_wav_duration 3.0 \
     --max_wav_duration 30.0 \
-    ${bpe_opts} ${codec_opts} \
-    "$@"
+    ${bpe_opts} ${codec_opts} 
