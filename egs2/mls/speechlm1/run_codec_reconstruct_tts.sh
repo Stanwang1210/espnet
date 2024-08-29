@@ -16,10 +16,10 @@ stop_stage=3
 
 # codec_choices=(SoundStream EnCodec SoundStream_amuse "EnCodec_amuse")
 codec_choices=(SoundStream)
-# for codec_choice in "${codec_choices[@]}";
-# do 
-#     bash run_nar_tts.sh ${codec_choice} ${stage} ${stop_stage} ${ngpu}
-# done
+for codec_choice in "${codec_choices[@]}";
+do 
+    bash run_nar_tts.sh ${codec_choice} ${stage} ${stop_stage} ${ngpu}
+done
 
 stage=4
 stop_stage=15
