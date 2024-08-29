@@ -10,7 +10,7 @@ log() {
 
 log "Please set the ngpu here"
 ngpu=4
-langs=("pt" "pl")
+langs=(es en fr nl it pt pl de)
 
 for lang in "${langs[@]}"
 do

@@ -8,7 +8,6 @@ log() {
 }
 
 log "Please run the 'run_prepare_data.sh' script before running this script"
-langs=("pt" "pl")
 ngpu=2
 stage=6
 stop_stage=15
