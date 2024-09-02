@@ -4,16 +4,19 @@
 set -e
 set -u
 set -o pipefail
-
+conda_root=/ocean/projects/cis210027p/swang26/miniconda3
+env_name=espnet_codec
+source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
+conda activate ${conda_root}/envs/${env_name}
 lang=$1
 stage=$2
 stop_stage=$3 
 codec_choice=${4:-"SoundStream"}
 ngpu=${5:-4}
 data_split="full" # one of full 1h 10h
-local_data_opts="--lang ${lang} --data_split ${data_split}"
+local_data_opts="--lang ${lang} --data_split ${data_split} --stage 1 "
 
-train_set="mls_${lang}_train"
+train_set="mls_${lang}_train_subset"
 valid_set="mls_${lang}_dev"
 test_sets="mls_${lang}_dev mls_${lang}_test"
 
@@ -42,6 +45,9 @@ elif [ ${codec_choice} == "EnCodec_amuse" ]; then
     fs=16000
     codec_opts+=" --codec_hf_model_tag espnet/amuse_encodec_16k"
     inference_config=conf/decode_espnet_amuse_encodec.yaml
+elif [ ${codec_choice} == "EnCodec_original" ]; then
+    fs=24000
+    inference_config=conf/decode_encodec.yaml
 
 else
     echo "Unknown codec choice"
@@ -58,7 +64,7 @@ fi
     --data_combo_name "${data_combo_name}" \
     --fs ${fs} \
     --ngpu ${ngpu} \
-    --nj 8 \
+    --nj 64 \
     --inference_nj ${inference_nj} \
     --gpu_inference true \
     --cleaner None \
