@@ -9,5 +9,5 @@ seed: 1
 # offline tokenizer
 codec_conf:
     codec_choice: ESPnet
-    hf_model_tag: espnet/amuse_speech_soundstream_16k
+    hf_model_tag: espnet/mls-multi_soundstream_16k
     codec_fs: 16000
