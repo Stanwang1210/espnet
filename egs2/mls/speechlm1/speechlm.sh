@@ -150,7 +150,7 @@ if ! "${skip_data_prep}"; then
 
         # Check feature type
     if [ "${feats_type}" = raw ]; then
-        data_feats="${dumpdir}/raw_${task}_${data_name}_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '-' '_')"
+        data_feats="${dumpdir}/raw_${task}_${data_name}_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
         data_audio="${dumpdir}/audio_raw_${task}_${data_name}"
     else
         log "${help_message}"
@@ -328,7 +328,7 @@ if ! "${skip_data_prep}"; then
                         --src_dir ${data_audio}/${dset} \
                         --tgt_dir ${data_feats}/${dset} \
                         --codec_fs ${fs} \
-                        --dump_audio false \
+                        --dump_audio true \
                         --file_name ${_name} \
                         --nj ${nj} \
                         --codec_choice ${codec_choice} \
