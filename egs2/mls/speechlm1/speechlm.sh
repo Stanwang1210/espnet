@@ -178,7 +178,7 @@ else
 fi
 
 if [ -z "${speechlm_stats_dir}" ]; then
-    speechlm_stats_dir="${expdir}/speechlm_stats_${data_combo_name}"
+    speechlm_stats_dir="${expdir}/speechlm_stats_${data_combo_name}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 fi
 
 if [ "${bpemode}" == "unigram" ]; then
@@ -198,7 +198,7 @@ else
 fi
 
 if [ -z ${token_list_dir} ]; then
-    token_list_dir=data/token_list/${data_combo_name}
+    token_list_dir=data/token_list/${data_combo_name}_$(echo ${codec_hf_model_tag} | tr '/' '_')
 fi
 
 # check for stage 8-9: training and inference
