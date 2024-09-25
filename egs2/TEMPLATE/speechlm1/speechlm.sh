@@ -255,7 +255,7 @@ if ! "${skip_data_prep}"; then
         else
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
-        
+        _dsets=${test_sets}
         for dset in ${_dsets}; do
             mkdir -p ${data_audio}/${dset}
 

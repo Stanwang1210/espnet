@@ -60,7 +60,7 @@ def main(args):
 
     # (1) parse all results
     stats_dict = {}
-    for score_file in args.all_eval_results:
+    for metric, score_file in zip(args.metrics, args.all_eval_results):
         for line in open(score_file):
             line = line.strip().replace("'", '"')
             line = json.loads(line)
@@ -79,12 +79,11 @@ def main(args):
             for key, value in line.items():
                 if example_name not in stats_dict[utt_name]:
                     stats_dict[utt_name][example_name] = {}
-                stats_dict[utt_name][example_name][key] = (value, weight)
+                stats_dict[utt_name][example_name][metric] = (value, weight)
 
     # (2) validate all utterances:
     for utt_name in stats_dict.keys():
         other_sample = next(iter(stats_dict[utt_name].values()))
-
         # (2.1) add dummy examples until reach `nbest` examples
         count = 0
         while len(stats_dict[utt_name]) < args.nbest:
@@ -189,7 +188,7 @@ def worse_result(metric):
     if metric == "spk_similarity":
         return 0.0
 
-    elif metric == "utmos":
+    elif metric == "utmos" or metric ==  "spk_utmos":
         return 0.0
 
     elif metric == "wer":
@@ -205,7 +204,7 @@ def sort_reverse(metric):
     if metric == "spk_similarity":
         return True
 
-    elif metric == "utmos":
+    elif metric == "utmos" or metric == "spk_utmos":
         return True
 
     elif metric == "wer":

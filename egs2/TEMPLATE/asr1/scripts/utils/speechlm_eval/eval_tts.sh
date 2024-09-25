@@ -28,27 +28,28 @@ SECONDS=0
 . ./path.sh
 . ./cmd.sh
 
-stage=1
-stop_stage=100
+stage=3
+stop_stage=3
 nj=8
 inference_nj=8
 gpu_inference=true
 nbest=1
-
+lang=
 gen_dir=
 ref_dir=
 key_file=
 eval_wer=true
 eval_spk=true
 eval_mos=true
+eval_spk_mos=true
 spk_config=conf/eval_spk.yaml
 mos_config=conf/eval_mos.yaml
 
 # wer options
 whisper_tag=large
 whisper_dir=local/whisper
-cleaner=whisper_en
-hyp_cleaner=whisper_en
+cleaner=whisper_basic
+hyp_cleaner=whisper_basic
 
 python=python3
 
@@ -58,16 +59,17 @@ log "$0 $*"
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     if ${eval_wer}; then
         # Use ESPnet builtin script
-        ./scripts/utils/evaluate_asr.sh \
-            --whisper_tag ${whisper_tag} \
-            --whisper_dir ${whisper_dir} \
-            --cleaner ${cleaner} \
-            --hyp_cleaner ${hyp_cleaner} \
-            --inference_nj ${inference_nj} \
-            --nj ${nj} \
-            --gt_text ${ref_dir}/text \
-            --gpu_inference ${gpu_inference} \
-            ${gen_dir}/wav.scp ${gen_dir}/scoring/eval_wer
+        # ./scripts/utils/evaluate_asr.sh \
+        #     --whisper_tag ${whisper_tag} \
+        #     --whisper_dir ${whisper_dir} \
+        #     --cleaner ${cleaner} \
+        #     --hyp_cleaner ${hyp_cleaner} \
+        #     --inference_nj ${inference_nj} \
+        #     --nj ${nj} \
+        #     --gt_text ${ref_dir}/text \
+        #     --gpu_inference ${gpu_inference} \
+        #     --decode_options "{task: transcribe, language: ${lang}, beam_size: 1}" \
+        #     ${gen_dir}/wav.scp ${gen_dir}/scoring/eval_wer
         
         # convert to result json file
         ./pyscripts/utils/speechlm_convert_asr_result.py \
@@ -82,15 +84,20 @@ fi
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     # User VERSA
-    for eval_item in mos spk; do
+    for eval_item in spk ; do
         eval_flag=eval_${eval_item}
         if ${!eval_flag}; then
             # (1) init
             opts=
             eval_dir=${gen_dir}/scoring/eval_${eval_item}; mkdir -p ${eval_dir}
+            log "Eval dir: ${eval_dir}"
 
             # (2) define pred, ref and config
-            if [ ${eval_item} == "mos" ]; then
+            if [ ${eval_item} == "spk_mos" ]; then
+                pred_file=${ref_dir}/utt2spk
+                score_config=${mos_config}
+                gt_file=
+            elif [ ${eval_item} == "mos" ]; then
                 pred_file=${gen_dir}/wav.scp
                 score_config=${mos_config}
                 gt_file=
@@ -128,14 +135,16 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
             fi
 
             ${_cmd} --gpu "${_ngpu}" JOB=1:"${_nj}" "${eval_dir}"/eval_${eval_item}.JOB.log \
-                ${python} -m speech_evaluation.bin.espnet_scorer \
+                ${python} -m versa.bin.espnet_scorer \
                     --pred ${eval_dir}/pred.JOB \
                     --score_config ${score_config} \
                     --use_gpu ${gpu_inference} \
+                    --rank JOB \
                     --output_file ${eval_dir}/result.JOB.txt \
                     --io soundfile \
                     ${opts} || exit 1;
-            
+                
+
             # (5) aggregate
             pyscripts/utils/aggregate_eval.py \
                 --logdir ${eval_dir} \
@@ -164,11 +173,16 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         metrics+="spk_similarity "
     fi
 
-    if ${eval_spk}; then
+    if ${eval_mos}; then
         all_eval_results+="${gen_dir}/scoring/eval_mos/utt_result.txt "
         metrics+="utmos "
     fi
-
+    if ${eval_spk_mos}; then
+        all_eval_results+="${gen_dir}/scoring/eval_spk_mos/utt_result.txt "
+        metrics+="spk_utmos "
+    fi
+    log "metrics: ${metrics}"
+    log "all_eval_results: ${all_eval_results}"
     python3 pyscripts/utils/result_summary.py \
         --all_eval_results ${all_eval_results} \
         --output_dir ${gen_dir}/scoring \

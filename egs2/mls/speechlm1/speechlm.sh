@@ -107,6 +107,7 @@ semantic_opts=""
 # (3) g2p
 g2p="g2p_en" # g2p
 cleaner=tacotron
+lang=
 # (4) text bpe
 bpemode=unigram    # unigram or huggingface
 bpemodel=          # external BPE model, use it if given; or Huggingface model tag
@@ -228,7 +229,7 @@ if [ -z "${inference_tag}" ]; then
 fi
 
 if [ -z "${speechlm_exp}" ]; then
-    speechlm_exp="${expdir}/speechlm_${tag}"
+    speechlm_exp="${expdir}/speechlm_${tag}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 fi
 
 # ========================== Main stages start from here. ==========================
@@ -303,10 +304,9 @@ if ! "${skip_data_prep}"; then
         else
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
-
+        # _dsets=${test_sets}
         # Parse the data preparation operations from Python task definition.
         all_triplets=$(python -c "from espnet2.speechlm.definitions import SPEECHLM_TASKS; print(SPEECHLM_TASKS['${task}'].data_triplets_string)")
-
         for dset in ${_dsets}; do
             opts=""
             for triplet in ${all_triplets}; do
@@ -328,16 +328,17 @@ if ! "${skip_data_prep}"; then
                         --src_dir ${data_audio}/${dset} \
                         --tgt_dir ${data_feats}/${dset} \
                         --codec_fs ${fs} \
-                        --dump_audio true \
+                        --dump_audio false \
                         --file_name ${_name} \
                         --nj ${nj} \
                         --codec_choice ${codec_choice} \
                         --checkpoint_path ${codec_checkpoint_path} \
                         --config_path ${codec_config_path} \
                         --hf_model_tag ${codec_hf_model_tag}
-
+                    log "Finish CODEC tokenization"
                 elif [ ${_modality} == "g2p" ]; then
                     log "Find G2P vocabulary and copy text"
+                    log "G2P: ${g2p}"
                     # Use a small portion (up to 100k examples) for efficiency
                     nutt=$(min "100000" "$(wc -l < ${data_audio}/${dset}/${_name})")
                     cat ${data_audio}/${dset}/${_name} | shuf | head -n ${nutt} \
@@ -691,7 +692,7 @@ if ! "${skip_eval}"; then
                 test_jsons+="${data_feats}/${test_set}/data.json "
             done
         fi
-
+        log "Test files: ${test_jsons}"
         for test_json in ${test_jsons}; do
             # (1) Find task, dataset name and folder name
             task=$(grep -o '"task": *[^,}]*' ${test_json} | sed -e 's/"task": *//' -e 's/"//g')
@@ -753,6 +754,7 @@ if ! "${skip_eval}"; then
                 --ref_dir ${_dir}/eval_cache \
                 --key_file ${_dir}/eval_cache/key_file \
                 --nj ${nj} \
+                --lang ${lang} \
                 --inference_nj ${inference_nj} \
                 --gpu_inference ${gpu_inference} \
                 --nbest ${nbest}
