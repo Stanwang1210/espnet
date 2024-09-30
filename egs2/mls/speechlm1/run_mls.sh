@@ -4,37 +4,37 @@
 set -e
 set -u
 set -o pipefail
-conda_root=/ocean/projects/cis210027p/swang26/miniconda3
-env_name=espnet_codec
-source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
-conda activate ${conda_root}/envs/${env_name}
-export PHONEMIZER_ESPEAK_LIBRARY=/ocean/projects/cis210027p/swang26/espnet_codec/egs2/mls/speechlm1/espeak-ng/lib/libespeak-ng.so
+# conda_root=/home/stan/miniconda3
+# env_name=espnet_codec
+# source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
+# conda activate ${conda_root}/envs/${env_name}
 langs=(en es de fr nl)
 dsets=(dev test)
 langs=(en )
 dsets=(test)
-stage=8
-stop_stage=10
+stage=2
+stop_stage=2
 codec_choice=Multi_Soundstream
 lang=$1
-ngpu=$2
-local_data_opts="--lang ${lang} --stage 1 "
+ngpu=1
+data_split="full" # one of full 1h 10h
+local_data_opts="--lang ${lang} --data_split ${data_split} --stage 1 "
 
-train_set="emilia_${lang}_train"
-valid_set="emilia_${lang}_dev"
-test_sets="emilia_${lang}_test"
+train_set="mls_${lang}_train"
+valid_set="mls_${lang}_dev"
+test_sets="mls_${lang}_test"
 # test_sets="test_clean"
 # for l in ${langs[@]}; do
 #     for dset in ${dsets[@]}; do
-#         test_sets+="emilia_${l}_${dset} "
+#         test_sets+="mls_${l}_${dset} "
 #     done
 # done
 
-expdir=exp_ar_tts_phn_emilia
+expdir=exp_ar_tts_phn
 bpe_opts="--nbpe 200"
 train_config=conf/train_valle.yaml
 task="tts"
-data_name="emilia"
+data_name="mls"
 data_combo_name="${task}_${data_name}_${lang}"
 codec_opts="--codec_choice ESPnet "
 inference_nj=4
@@ -101,7 +101,7 @@ fi
     --fs ${fs} \
     --ngpu ${ngpu} \
     --lang ${lang} \
-    --nj 16 \
+    --nj 64 \
     --inference_nj ${inference_nj} \
     --gpu_inference true \
     --cleaner None \
@@ -114,5 +114,5 @@ fi
     --test_sets "${test_sets}" \
     --min_wav_duration 3.0 \
     --max_wav_duration 30.0 \
-    --nbest 10 \
+    --nbest 1 \
     ${bpe_opts} ${codec_opts} 

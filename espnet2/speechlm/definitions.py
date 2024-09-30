@@ -74,14 +74,14 @@ SPEECHLM_TASKS["audiolm"] = SpeechLMTaskTemplate(
 )
 
 # For codec robustness project
-SPEECHLM_TASKS["tts"] = SpeechLMTaskTemplate(
-    conditions=[("text", "text_bpe", "text"), ("utt2spk", "spk", "text")],
-    targets=[("wav.scp", "codec", "kaldi_ark")],
-)
 # SPEECHLM_TASKS["tts"] = SpeechLMTaskTemplate(
-#     conditions=[("text", "g2p", "text"), ("utt2spk", "spk", "text")],
+#     conditions=[("text", "text_bpe", "text"), ("utt2spk", "spk", "text")],
 #     targets=[("wav.scp", "codec", "kaldi_ark")],
 # )
+SPEECHLM_TASKS["tts"] = SpeechLMTaskTemplate(
+    conditions=[("text", "g2p", "text"), ("utt2spk", "spk", "text")],
+    targets=[("wav.scp", "codec", "kaldi_ark")],
+)
 
 SPEECHLM_TASKS["asr"] = SpeechLMTaskTemplate(
     conditions=[("wav.scp", "codec", "kaldi_ark")],

@@ -257,7 +257,6 @@ if ! "${skip_data_prep}"; then
         else
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
-        
         for dset in ${_dsets}; do
             mkdir -p ${data_audio}/${dset}
 
@@ -304,7 +303,7 @@ if ! "${skip_data_prep}"; then
         else
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
-        # _dsets=${test_sets}
+        _dsets="${valid_set} ${test_sets}"
         # Parse the data preparation operations from Python task definition.
         all_triplets=$(python -c "from espnet2.speechlm.definitions import SPEECHLM_TASKS; print(SPEECHLM_TASKS['${task}'].data_triplets_string)")
         for dset in ${_dsets}; do
@@ -337,6 +336,7 @@ if ! "${skip_data_prep}"; then
                         --hf_model_tag ${codec_hf_model_tag}
                     log "Finish CODEC tokenization"
                 elif [ ${_modality} == "g2p" ]; then
+                    
                     log "Find G2P vocabulary and copy text"
                     log "G2P: ${g2p}"
                     # Use a small portion (up to 100k examples) for efficiency

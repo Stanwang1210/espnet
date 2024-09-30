@@ -95,6 +95,7 @@ class SpkEmbedExtractor:
             # assume config is the same path as the model file
             speech2embedding_kwargs = dict(
                 batch_size=1,
+                device=device,
                 dtype="float32",
                 train_config=None,
                 model_file=args.pretrained_model,
@@ -196,7 +197,7 @@ def main(argv):
                 details = line.split()
                 spk2utt[details[0]] = details[1:]
 
-        wav_scp = SoundScpReader(os.path.join(args.in_folder, "wav.scp"), np.float32)
+        wav_scp = kaldiio.load_scp(os.path.join(args.in_folder, "wav_resyn_ESPnet.scp"))
         os.makedirs(args.out_folder, exist_ok=True)
         writer_utt = kaldiio.WriteHelper(
             "ark,scp:{0}/{1}.ark,{0}/{1}.scp".format(

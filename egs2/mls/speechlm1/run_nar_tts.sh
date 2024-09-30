@@ -10,7 +10,10 @@ log() {
     local fname=${BASH_SOURCE[1]##*/}
     echo -e "$(date '+%Y-%m-%dT%H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
-
+conda_root=/ocean/projects/cis210027p/swang26/miniconda3
+env_name=espnet_codec_robustness
+source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
+conda activate ${conda_root}/envs/${env_name}
 
 
 codec_choice=$1
@@ -20,7 +23,7 @@ ngpu=${4:-4}
 n_fft=1024
 n_shift=256
 lang=all
-train_set="mls_${lang}_train"
+train_set="mls_${lang}_train_subset"
 valid_set="mls_${lang}_dev"
 test_sets="mls_${lang}_dev mls_${lang}_test"
 
@@ -35,18 +38,27 @@ g2p=g2p_en_no_space # or g2p_en
 local_data_opts="--trim_all_silence true" # trim all silence in the audio
 
 codec_opts="--codec_choice ESPnet"
-if [ ${codec_choice} == "SoundStream" ]; then
+if [ ${codec_choice} == "English_SoundStream" ]; then
     fs=16000
-    codec_opts+=" --codec_hf_model_tag espnet/libritts_soundstream16k"
-elif [ ${codec_choice} == "EnCodec" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-english_soundstream_16k"
+    inference_config=conf/decode_espnet_english_soundstream.yaml
+elif [ ${codec_choice} == "English_EnCodec" ]; then
     fs=16000
-    codec_opts+=" --codec_hf_model_tag espnet/libritts_encodec_16k"
-elif [ ${codec_choice} == "SoundStream_amuse" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-english_encodec_16k"
+    inference_config=conf/decode_espnet_english_encodec.yaml
+elif [ ${codec_choice} == "Multi_SoundStream" ]; then
     fs=16000
-    codec_opts+=" --codec_hf_model_tag espnet/amuse_soundstream16k"
-elif [ ${codec_choice} == "EnCodec_amuse" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-multi_soundstream_16k"
+    inference_config=conf/decode_espnet_multi_soundstream.yaml
+elif [ ${codec_choice} == "Multi_EnCodec" ]; then
     fs=16000
-    codec_opts+=" --codec_hf_model_tag espnet/amuse_encodec_16k"
+    codec_opts+=" --codec_hf_model_tag espnet/mls-multi_encodec_16k"
+    inference_config=conf/decode_espnet_multi_encodec.yaml
+elif [ ${codec_choice} == "EnCodec_original" ]; then
+    fs=24000
+    codec_opts="--codec_choice EnCodec "
+    inference_config=conf/decode_encodec.yaml
+
 else
     echo "Unknown codec choice"
     exit 1

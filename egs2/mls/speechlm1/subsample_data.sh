@@ -16,7 +16,7 @@ datadir=$2
 train_set=$3
 nutt=$(<"${datadir}/${train_set}"/wav.scp wc -l)
 if [ ${lang} == "en" ]; then
-    portion=0.022
+    portion=0.05
 elif [ ${lang} == "es" ]; then
     portion=0.99
 elif [ ${lang} == "fr" ]; then
