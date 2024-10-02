@@ -26,7 +26,7 @@ SECONDS=0
 # General configuration
 stage=1                 # Processes starts from the specified stage.
 stop_stage=10000        # Processes is stopped at the specified stage.
-skip_stages=            # Spicify the stage to be skipped
+skip_stages="6 8 9 10 11 "           # Spicify the stage to be skipped
 skip_data_prep=false    # Skip data preparation stages.
 skip_train=false        # Skip training stages.
 skip_eval=false         # Skip decoding and evaluation stages.
@@ -339,13 +339,13 @@ test_sets=${_test_sets}
 dumpdir="${dumpdir}_${fs}"
 # Check feature type
 if [ "${feats_type}" = raw ]; then
-    data_audio="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
-    data_extract="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+    data_audio="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+    data_extract="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 
     if [ ${tokenization_choice} == "codec" ]; then
-        data_feats="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+        data_feats="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
     else
-        data_feats="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+        data_feats="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
     fi
     
 else
@@ -378,7 +378,7 @@ utt_extra_files="text.${src_case}.${src_lang} text.${tgt_case}.${tgt_lang} utt2s
 
 # Check tokenization type
 if [ "${lang}" != noinfo ]; then
-    token_listdir=data/${lang}_token_list
+    token_listdir=data/emilia_${lang}_token_list/${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')
 else
     token_listdir=data/token_list
 fi
@@ -914,8 +914,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ] && ! [[ " ${skip_stages} " =~ [
             #     --config_path ${codec_config_path} \
             #     --hf_model_tag ${codec_hf_model_tag}
 
-                cp ${data_feats}/${dset}/wav.scp ${data_feats}/${dset}/text.${src_case}.${src_lang}
-                cp ${data_audio}/${dset}/text ${data_feats}/${dset}/text.${tgt_case}.${tgt_lang}
+                cp ${data_feats}/${dset}/index_files/wav.scp ${data_feats}/${dset}/text.${src_case}.${src_lang}
+                cp ${data_feats}/${dset}/index_files/text ${data_feats}/${dset}/text.${tgt_case}.${tgt_lang}
                 # cp ${data_audio}/${dset}/utt2spk    ${data_feats}/${dset}/utt2spk
         done
 
@@ -956,13 +956,12 @@ if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ] && ! [[ " ${skip_stages} " =~ [
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
     fi
-    if [ "${feats_type}" = raw ]; then
+    if [ "${feats_type}" = raw ] ; then
         # NOTE(Jinchuan): data prep with codec tokenization has been done. Skip this part
-        if [ "${tokenization_choice}" == "codec" ]; then
+        log "Stage 6: ${data_extract} -> ${data_feats}"
+        if [ "${tokenization_choice}" != "codec" ]  ; then
             continue
         fi
-        log "Stage 6: ${data_extract} -> ${data_feats}"
-
         _suf=
         if [ -n "${layer}" ]; then
             _suf="layer${layer}/"

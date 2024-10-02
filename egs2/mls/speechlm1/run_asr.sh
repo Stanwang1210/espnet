@@ -14,16 +14,18 @@ log() {
 
 log "$0 $*"
 src_lang=codec
-codec_choice=$1
-lang=en
+lang=$1
+ngpu=$2
+stage=$3
+stop_stage=$4
+codec_choice=$5
 codec_opts="--codec_choice ESPnet "
-expdir=exp_asr
+expdir=exp_asr_emilia
 
 
-train_set="mls_${lang}_train_subset"
-valid_set="mls_${lang}_dev"
-test_sets="mls_${lang}_test"
-
+train_set="emilia_${lang}_train"
+valid_set="emilia_${lang}_dev"
+test_sets="emilia_${lang}_test"
 
 inference_config=conf/decode_asr.yaml
 
@@ -37,27 +39,34 @@ tgt_nbpe=5000   # if token_joint is True, then only tgt_nbpe is used
 src_case="ts"
 tgt_case="ts"
 
+fs=16000
 if [ ${codec_choice} == "English_EnCodec" ]; then
-    fs=16000
     codec_opts+=" --codec_hf_model_tag espnet/mls-english_encodec_16k_360epoch"
     asr_config=conf/tuning/train_asr_ebranchformer_english_encodec.yaml
 elif [ ${codec_choice} == "Multi_EnCodec" ]; then
-    fs=16000
     codec_opts+=" --codec_hf_model_tag espnet/mls-multi_encodec_16k_360epoch"
     asr_config=conf/tuning/train_asr_ebranchformer_multi_encodec.yaml
 elif [ ${codec_choice} == "Audio_EnCodec" ]; then
-    fs=16000
     codec_opts+=" --codec_hf_model_tag espnet/mls-audioset_encodec_16k_360epoch"
     asr_config=conf/tuning/train_asr_ebranchformer_audioset_encodec.yaml
+elif [ ${codec_choice} == "English_Soundstream" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-english_soundstream_16k"
+    asr_config=conf/tuning/train_asr_ebranchformer_english_soundstream.yaml
+elif [ ${codec_choice} == "Multi_Soundstream" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-multi_soundstream_16k"
+    asr_config=conf/tuning/train_asr_ebranchformer_multi_soundstream.yaml
+elif [ ${codec_choice} == "Audio_Soundstream" ]; then
+    codec_opts+=" --codec_hf_model_tag espnet/mls-audioset_soundstream_16k"
+    asr_config=conf/tuning/train_asr_ebranchformer_audioset_soundstream.yaml
 fi
 log "${codec_opts}"
 ./asr2.sh \
     --tokenization_choice "codec" \
-    --nj 8 \
-    --ngpu 1 \
-    --stage 13 \
+    --nj 16 \
+    --ngpu ${ngpu} \
+    --stage ${stage} \
     --fs ${fs} \
-    --stop_stage 15 \
+    --stop_stage ${stop_stage} \
     --gpu_inference true \
     --audio_format flac.ark \
     --fs ${fs} \

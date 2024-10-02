@@ -17,17 +17,21 @@ current_date=$(date +%Y-%m-%d)
 
 lang=$1
 ngpu=$2
-cmd="bash run.sh ${lang} ${ngpu}"
-tag=tts_train_${lang}
+stage=$3
+stop_stage=$4
+codec_choice=Multi_Soundstream
+
+gpu_cluster=GPU-shared
+cmd="bash run.sh ${lang} ${ngpu} ${stage} ${stop_stage} ${codec_choice}"
+tag=tts_train_${lang}_${codec_choice}
 log_dir=slurm_logs/${current_date}/${tag}
 mkdir -p ${log_dir}
 sbatch  \
-    --dependency=afterok:26076071 \
     --job-name=${tag} \
     --output=${log_dir}/${tag}.txt \
     --error=${log_dir}/${tag}.err \
-    --time=08:00:00 \
-    --partition=GPU-small \
+    --time=1-12:00:00 \
+    --partition=${gpu_cluster} \
     --qos=high_priority \
     --gpus=v100-32:${ngpu} \
     --cpus-per-task=10 \

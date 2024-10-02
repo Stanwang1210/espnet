@@ -6,12 +6,12 @@ corelm_conf:
     head: 8
     ar_layer: 12
     nar_layer: 12
-    n_ctx: 3000
+    n_ctx: 5000
 
 # Dataloader
 batch_type: numel
-batch_bins: 8000
-num_iters_per_epoch: 15000
+batch_bins: 6000
+num_iters_per_epoch: 10000
 accum_grad: 1
 grad_clip: 5
 max_epoch: 100
