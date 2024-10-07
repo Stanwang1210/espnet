@@ -4,25 +4,25 @@
 set -e
 set -u
 set -o pipefail
-conda_root=/ocean/projects/cis210027p/swang26/miniconda3
-env_name=espnet_codec
-source ${conda_root}/envs/${env_name}/etc/profile.d/conda.sh
-conda activate ${conda_root}/envs/${env_name}
+# conda_root=/ocean/projects/cis210027p/sws
 export PHONEMIZER_ESPEAK_LIBRARY=/ocean/projects/cis210027p/swang26/espnet_codec/egs2/mls/speechlm1/espeak-ng/lib/libespeak-ng.so
 langs=(en es de fr nl)
 dsets=(dev test)
 langs=(en )
 dsets=(test)
-stage=8
-stop_stage=10
-codec_choice=Multi_Soundstream
 lang=$1
 ngpu=$2
+stage=$3
+stop_stage=$4
+codec_choice=$5
 local_data_opts="--lang ${lang} --stage 1 "
 
 train_set="emilia_${lang}_train"
 valid_set="emilia_${lang}_dev"
-test_sets="emilia_${lang}_test"
+test_sets="mls_${lang}_test emilia_${lang}_test "
+# train_set="commonvoice_train_${lang}"
+# valid_set="commonvoice_dev_${lang}"
+# test_sets="emilia_${lang}_test commonvoice_${lang}_test"
 # test_sets="test_clean"
 # for l in ${langs[@]}; do
 #     for dset in ${dsets[@]}; do
@@ -116,3 +116,4 @@ fi
     --max_wav_duration 30.0 \
     --nbest 10 \
     ${bpe_opts} ${codec_opts} 
+    # --skip_train true \

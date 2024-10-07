@@ -20,13 +20,15 @@ stage=$3
 stop_stage=$4
 codec_choice=$5
 codec_opts="--codec_choice ESPnet "
-expdir=exp_asr_emilia
+expdir=exp_esc
 
 
 train_set="emilia_${lang}_train"
 valid_set="emilia_${lang}_dev"
 test_sets="emilia_${lang}_test"
-
+train_set="esc50_train"
+valid_set="esc50_dev"
+test_sets="esc50_test"
 inference_config=conf/decode_asr.yaml
 
 tgt_nbpe=5000   # if token_joint is True, then only tgt_nbpe is used
@@ -51,13 +53,13 @@ elif [ ${codec_choice} == "Audio_EnCodec" ]; then
     asr_config=conf/tuning/train_asr_ebranchformer_audioset_encodec.yaml
 elif [ ${codec_choice} == "English_Soundstream" ]; then
     codec_opts+=" --codec_hf_model_tag espnet/mls-english_soundstream_16k"
-    asr_config=conf/tuning/train_asr_ebranchformer_english_soundstream.yaml
+    asr_config=conf/tuning/train_esc_ebranchformer_english_soundstream.yaml
 elif [ ${codec_choice} == "Multi_Soundstream" ]; then
     codec_opts+=" --codec_hf_model_tag espnet/mls-multi_soundstream_16k"
-    asr_config=conf/tuning/train_asr_ebranchformer_multi_soundstream.yaml
+    asr_config=conf/tuning/train_esc_transformer_multi_soundstream.yaml
 elif [ ${codec_choice} == "Audio_Soundstream" ]; then
     codec_opts+=" --codec_hf_model_tag espnet/mls-audioset_soundstream_16k"
-    asr_config=conf/tuning/train_asr_ebranchformer_audioset_soundstream.yaml
+    asr_config=conf/tuning/train_esc_ebranchformer_audioset_soundstream.yaml
 fi
 log "${codec_opts}"
 ./asr2.sh \
@@ -76,7 +78,7 @@ log "${codec_opts}"
     --src_lang ${src_lang} \
     --tgt_lang ${lang} \
     --src_token_type "null" \
-    --tgt_token_type "char" \
+    --tgt_token_type "word" \
     --tgt_case ${tgt_case} \
     --asr_config "${asr_config}" \
     --inference_config "${inference_config}" \

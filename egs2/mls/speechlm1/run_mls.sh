@@ -12,15 +12,15 @@ langs=(en es de fr nl)
 dsets=(dev test)
 langs=(en )
 dsets=(test)
-stage=2
-stop_stage=2
-codec_choice=Multi_Soundstream
 lang=$1
-ngpu=1
+ngpu=$2
+stage=$3
+stop_stage=$4
+codec_choice=$5
 data_split="full" # one of full 1h 10h
 local_data_opts="--lang ${lang} --data_split ${data_split} --stage 1 "
 
-train_set="mls_${lang}_train"
+train_set="mls_${lang}_train_subset"
 valid_set="mls_${lang}_dev"
 test_sets="mls_${lang}_test"
 # test_sets="test_clean"
@@ -30,7 +30,7 @@ test_sets="mls_${lang}_test"
 #     done
 # done
 
-expdir=exp_ar_tts_phn
+expdir=exp_ar_tts_phn_mls
 bpe_opts="--nbpe 200"
 train_config=conf/train_valle.yaml
 task="tts"
@@ -101,7 +101,7 @@ fi
     --fs ${fs} \
     --ngpu ${ngpu} \
     --lang ${lang} \
-    --nj 64 \
+    --nj 16 \
     --inference_nj ${inference_nj} \
     --gpu_inference true \
     --cleaner None \
@@ -114,5 +114,5 @@ fi
     --test_sets "${test_sets}" \
     --min_wav_duration 3.0 \
     --max_wav_duration 30.0 \
-    --nbest 1 \
+    --nbest 10 \
     ${bpe_opts} ${codec_opts} 

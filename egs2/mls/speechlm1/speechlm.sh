@@ -303,7 +303,6 @@ if ! "${skip_data_prep}"; then
         else
             _dsets="${train_set} ${valid_set} ${test_sets}"
         fi
-        _dsets="${valid_set} ${test_sets}"
         # Parse the data preparation operations from Python task definition.
         all_triplets=$(python -c "from espnet2.speechlm.definitions import SPEECHLM_TASKS; print(SPEECHLM_TASKS['${task}'].data_triplets_string)")
         for dset in ${_dsets}; do
@@ -340,18 +339,18 @@ if ! "${skip_data_prep}"; then
                     log "Find G2P vocabulary and copy text"
                     log "G2P: ${g2p}"
                     # Use a small portion (up to 100k examples) for efficiency
-                    nutt=$(min "100000" "$(wc -l < ${data_audio}/${dset}/${_name})")
-                    cat ${data_audio}/${dset}/${_name} | shuf | head -n ${nutt} \
-                      > ${data_audio}/${dset}/${_name}.g2p_train && echo ""
-                    ${python} -m espnet2.bin.tokenize_text \
-                        --token_type "phn" -f 2- \
-                        --input "${data_audio}/${dset}/${_name}.g2p_train" \
-                        --output "${data_feats}/${dset}/token_lists/g2p_token_list" \
-                        --non_linguistic_symbols "${nlsyms_txt}" \
-                        --cleaner "${cleaner}" \
-                        --g2p "${g2p}" \
-                        --write_vocabulary true
-                    cp "${data_audio}/${dset}/${_name}" "${data_feats}/${dset}/${_name}"
+                    # nutt=$(min "100000" "$(wc -l < ${data_audio}/${dset}/${_name})")
+                    # cat ${data_audio}/${dset}/${_name} | shuf | head -n ${nutt} \
+                    #   > ${data_audio}/${dset}/${_name}.g2p_train && echo ""
+                    # ${python} -m espnet2.bin.tokenize_text \
+                    #     --token_type "phn" -f 2- \
+                    #     --input "${data_audio}/${dset}/${_name}.g2p_train" \
+                    #     --output "${data_feats}/${dset}/token_lists/g2p_token_list" \
+                    #     --non_linguistic_symbols "${nlsyms_txt}" \
+                    #     --cleaner "${cleaner}" \
+                    #     --g2p "${g2p}" \
+                    #     --write_vocabulary true
+                    # cp "${data_audio}/${dset}/${_name}" "${data_feats}/${dset}/${_name}"
                 
                 elif [ ${_modality} == "text_bpe" ]; then
                     if [ "${bpemode}" == "huggingface" ]; then

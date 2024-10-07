@@ -339,13 +339,13 @@ test_sets=${_test_sets}
 dumpdir="${dumpdir}_${fs}"
 # Check feature type
 if [ "${feats_type}" = raw ]; then
-    data_audio="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
-    data_extract="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+    data_audio="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+    data_extract="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 
     if [ ${tokenization_choice} == "codec" ]; then
-        data_feats="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+        data_feats="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
     else
-        data_feats="${dumpdir}/raw_tts_emilia_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+        data_feats="${dumpdir}/raw_tts_mls_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
     fi
     
 else
@@ -378,7 +378,7 @@ utt_extra_files="text.${src_case}.${src_lang} text.${tgt_case}.${tgt_lang} utt2s
 
 # Check tokenization type
 if [ "${lang}" != noinfo ]; then
-    token_listdir=data/emilia_${lang}_token_list/${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')
+    token_listdir=data/mls_${lang}_token_list/${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')
 else
     token_listdir=data/token_list
 fi
@@ -1044,6 +1044,8 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
 
         # The first symbol in token_list must be "<blank>" and the last must be also sos/eos:
         # 0 is reserved for CTC-blank for ASR and also used as ignore-index in the other task
+        log "Generate token_list from ${data_feats}/${lang}_token_train.txt"
+        log "Save it to ${tgt_token_list}"
         ${python} -m espnet2.bin.tokenize_text  \
             --token_type "${tgt_token_type}" \
             --input "${data_feats}/${lang}_token_train.txt" --output "${tgt_token_list}" ${_opts} \

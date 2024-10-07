@@ -107,6 +107,7 @@ class ValleLM(AbsCoreLM):
         assert dec_seq.dim() == 3
 
         batch_size = dec_seq.size(0)
+        dec_seq = dec_seq.long()
         dec_seq_emb = self.emb(dec_seq)  # [B, T, nq, D]
 
         # Auto-Regressive part
