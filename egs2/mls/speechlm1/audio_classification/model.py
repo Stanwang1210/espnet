@@ -7,28 +7,22 @@ class ESC50Model(nn.Module):
         super().__init__()
         
         self.embedding = embedding
-        self.encoder_config = config.get(
-            "encoder_conf", 
-            {"d_model": 256, "nhead": 4, "num_encoder_layers": 2, "dim_feedforward": 512, "dropout": 0.1}
-        )
+        self.encoder_config = config.get("encoder_conf")
+        self.decoder_config = config.get("decoder_conf")
         self.encoder = nn.TransformerEncoder(**encoder_config)
         
-        self.decoder_config = config.get(
-            "decoder_conf", 
-            {"num_decoder_layers": 2, "dim_feedforward": 512, "dropout": 0.1}
-        )
         mlp_module = nn.Sequential(
-            nn.Linear(encoder_config["d_model"], decoder_config["dim_feedforward"]),
+            nn.Linear(self.encoder_config["d_model"], self.decoder_config["dim_feedforward"]),
             nn.ReLU(),
-            nn.Dropout(decoder_config["dropout"]),
-            nn.Linear(decoder_config["dim_feedforward"], encoder_config["d_model"]),
+            nn.Dropout(self.decoder_config["dropout"]),
+            nn.Linear(self.decoder_config["dim_feedforward"], self.encoder_config["d_model"]),
         )
         self.decoder = nn.Sequential(
-            *[mlp_module for _ in range(decoder_config["num_decoder_layers"])]
+            *[mlp_module for _ in range(self.decoder_config["num_decoder_layers"])]
         )
         
         self.project_dim = config.get("project_dim", 50)
-        self.classifier = nn.Linear(encoder_config["d_model"], project_dim)
+        self.classifier = nn.Linear(eself.decoder_config["d_model"], self.project_dim)
 
     def forward(self, codec):
         
