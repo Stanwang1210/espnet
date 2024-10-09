@@ -10,8 +10,8 @@ from espnet2.speechlm.tokenizer.codec_tokenizer import CodecTokenizer
 from espnet2.mt.frontend.embedding import CodecEmbedding
 
 from model import ESC50Model
-from dataset import ESC50Dataset
-from utils import set_seed, draw, get_dataloader
+from dataset import ESC50Dataset, get_dataloader
+from utils import set_seed, draw
 
 
 
@@ -19,7 +19,7 @@ def get_parser():
     
     parser = argparse.ArgumentParser(description="ESC")
     parser.add_argument(
-        "--data_dir", type=str, default="", help="path to the dump directory"
+        "--dumpdir", type=str, default="", help="path to the dump directory"
     )
     parser.add_argument(
         "--exp_dir", type=str, default="", help="path to the exp directory"
@@ -101,17 +101,17 @@ def test(model_path, test_dataloader, criterion, logger):
     with open(expdir / 'test_output.json', 'w') as f:
         json.dump(test_output, f)
 def main(
-    data_dir: str,
+    dumpdir: str,
     exp_dir: str,
     model_tag: str,
     config_file: str,
     seed: int,
 ):
     set_seed(seed)
-    data_dir = Path(data_dir)
+    dumpdir = Path(dumpdir)
     config_file = Path(config_file)
     
-    assert data_dir.is_dir(), f"{data_dir} is not a directory"
+    assert dumpdir.is_dir(), f"{dumpdir} is not a directory"
     assert config_file.exists(), f"{config_file} is not a file"
     
     with open(config_file) as f:
@@ -133,7 +133,7 @@ def main(
     logger = logging.getLogger("train_esc50_main")
     
     logger.info(f"Experiment Directory: {exp_dir}")
-    logger.info(f"Data Directory: {data_dir}")
+    logger.info(f"Data Directory: {dumpdir}")
     logger.info(f"Model Tag: {model_tag}")
     logger.info(f"Config File: {config_file}")
     criterion = nn.CrossEntropyLoss()
@@ -144,11 +144,11 @@ def main(
     patience = config.get("patience", 10)
     best_acc = 0.0
     
-    train_dataset = ESC50Dataset(data_dir / "esc50_train")
-    dev_dataset = ESC50Dataset(data_dir / "esc50_dev")
+    train_dataset = ESC50Dataset(dumpdir / "esc50_train")
+    dev_dataset = ESC50Dataset(dumpdir / "esc50_dev")
     
     codec_conf = config.get("codec_conf")
-    with open(data_dir / "esc50_train/token_lists/codec_token_list", 'r') as f:
+    with open(dumpdir / "esc50_train/token_lists/codec_token_list", 'r') as f:
         codec_token_list = f.readlines()
 
     embedding = CodecEmbedding(input_size=len(codec_token_list), **codec_conf)
@@ -226,7 +226,7 @@ def main(
             )
         
     test_dataset = ESC50Dataset(
-        data_dir / "esc50_test"
+        dumpdir / "esc50_test"
     )
     test_dataloader = DataLoader(
         test_dataset,
@@ -250,4 +250,5 @@ def main(
     
 if '__name__' == '__main__':
     args = get_parser()
+    logger.info(args)
     main(**vars(args))

@@ -22,19 +22,3 @@ def draw(train_data, valid_data, tag, save_path):
     plt.title(f"{tag} vs. Epoch")
     plt.savefig(save_path)
     
-def get_dataloader(train_dataset, dev_dataset, batch_size):
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size,
-        shuffle=True,
-        collate_fn=train_dataset.collate_fn,
-    )
-
-    dev_dataloader = DataLoader(
-        dev_dataset,
-        batch_size,
-        shuffle=False,
-        collate_fn=dev_dataset.collate_fn,
-    )
-    
-    return train_dataloader, dev_dataloader
