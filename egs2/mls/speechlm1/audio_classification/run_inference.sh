@@ -41,6 +41,7 @@ for fold in 1 2 3 4 5; do
     --model_tag ${model_tag} \
     --dumpdir ${dumpdir} \
     --exp_dir ${expdir} \
-    --fold ${fold}  &
+    --fold ${fold} \
+    --skip_train &
 done
 wait

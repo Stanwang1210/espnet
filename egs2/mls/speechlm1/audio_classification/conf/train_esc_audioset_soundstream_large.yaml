@@ -3,23 +3,23 @@ codec_conf:
     token_bias: 2
     patch_size: 8
     positional_dropout_rate: 0.1
-    hf_model_tag: espnet/mls-multi_soundstream_16k
+    hf_model_tag: espnet/mls-audioset_soundstream_16k
 
 encoder_conf:
-  d_model: 512
+  d_model: 256 
   nhead: 4 
-  num_encoder_layers: 3
+  num_encoder_layers: 6
   dim_feedforward: 512 
   dropout: 0.1
 
 decoder_conf:
-  num_decoder_layers: 3 
-  dim_feedforward: 512
+  num_decoder_layers: 6 
+  dim_feedforward: 256
   dropout: 0.1
 
 optim: Adam
 optim_conf:
-  lr: 0.0005
+  lr: 0.001
   betas:
       - 0.9
       - 0.95
@@ -30,3 +30,4 @@ accum_grad: 1
 epoch: 100
 patience: 20
 train_count: 5
+

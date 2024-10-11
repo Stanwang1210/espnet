@@ -14,6 +14,8 @@ def set_seed(seed):
         
 def draw(train_data, valid_data, tag, save_path):
     
+    plt.cla()
+    plt.clf()
     plt.plot(train_data, label=f"train_{tag}")
     plt.plot(valid_data, label=f"valid_{tag}")
     plt.legend(loc="best")
@@ -21,4 +23,5 @@ def draw(train_data, valid_data, tag, save_path):
     plt.ylabel(tag)
     plt.title(f"{tag} vs. Epoch")
     plt.savefig(save_path)
+    
     
