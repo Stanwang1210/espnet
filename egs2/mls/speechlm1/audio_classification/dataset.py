@@ -9,7 +9,7 @@ class ESC50Dataset(Dataset):
         self.data_dir = Path(data_dir)
         self.wavscp = self.data_dir / "index_files/wav.scp"
         self.text = self.data_dir / "index_files/text"
-        
+
         self.codecs = kaldiio.load_scp(str(self.wavscp))
         self.labels = {}
         with open(self.text, "r", encoding="utf-8") as f:
@@ -17,7 +17,7 @@ class ESC50Dataset(Dataset):
                 utt_id, txt = line.strip().split(maxsplit=1)
                 txt = txt.split(":")[-1]
                 self.labels[utt_id] = int(txt)
-                
+
         self.utt_ids = list(self.codecs.keys())
 
     def __len__(self):
@@ -34,7 +34,8 @@ class ESC50Dataset(Dataset):
         codec = torch.stack([torch.from_numpy(c) for c in codec])
         label = torch.tensor(list(label))
         return utt_id, codec, label
-        
+
+
 def get_dataloader(train_dataset, dev_dataset, test_dataset, batch_size):
     train_dataloader = DataLoader(
         train_dataset,
@@ -49,12 +50,12 @@ def get_dataloader(train_dataset, dev_dataset, test_dataset, batch_size):
         shuffle=False,
         collate_fn=dev_dataset.collate_fn,
     )
-    
+
     test_dataloader = DataLoader(
         test_dataset,
         batch_size,
         shuffle=False,
         collate_fn=test_dataset.collate_fn,
     )
-    
+
     return train_dataloader, dev_dataloader, test_dataloader

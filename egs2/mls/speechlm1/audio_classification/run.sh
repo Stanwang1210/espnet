@@ -1,6 +1,6 @@
 
 codec_choice=$1
-gpu_id=$2
+gpu_id=0
 
 if [ ${codec_choice} == "English_EnCodec" ]; then
     config_file=audio_classification/conf/train_esc_multi_soundstream.yaml

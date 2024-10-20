@@ -17,7 +17,7 @@ decoder_conf:
   dim_feedforward: 512
   dropout: 0.1
 
-optim: Adam
+optim: AdamW
 optim_conf:
   lr: 0.0005
   betas:
@@ -25,9 +25,15 @@ optim_conf:
       - 0.95
   weight_decay: 0.0000001
 
-batch_size: 256
-accum_grad: 1
-epoch: 100
-patience: 20
+scheduler: StepLR
+scheduler_conf:
+  step_size: 10 
+  gamma: 0.9
+
+
+batch_size: 128
+accum_grad: 2
+epoch: 50
+patience: 10
 train_count: 5
 
