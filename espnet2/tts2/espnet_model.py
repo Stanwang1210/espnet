@@ -193,6 +193,13 @@ class ESPnetTTS2Model(AbsESPnetModel):
 
         """
         # feature extraction
+        discrete_feats, discrete_feats_lengths = self.discrete_feats_extract(
+            discrete_speech, discrete_speech_lengths
+        )
+        
+        # Only for collect speech
+        discrete_feats = discrete_speech.view(discrete_feats.size(0), -1, self.tts.discrete_token_layers)
+        discrete_feats_lengths = discrete_feats_lengths // self.tts.discrete_token_layers
         feats, feats_lengths = speech, speech_lengths
         if self.pitch_extract is not None:
             pitch, pitch_lengths = self.pitch_extract(
@@ -296,6 +303,6 @@ class ESPnetTTS2Model(AbsESPnetModel):
         output_dict = self.tts.inference(**input_dict, **decode_config)
 
         # Predict the discrete tokens. Currently only apply argmax for selction
-        output_dict["feat_gen"] = output_dict["feat_gen"].argmax(1)
+        # output_dict["feat_gen"] = output_dict["feat_gen"].argmax(1)
 
         return output_dict

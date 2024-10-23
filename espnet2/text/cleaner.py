@@ -49,6 +49,8 @@ class TextCleaner:
         for t in self.cleaner_types:
             if t == "tacotron":
                 text = tacotron_cleaner.cleaners.custom_english_cleaners(text)
+            elif t == "transliteration_cleaners":
+                text = tacotron_cleaner.cleaners.transliteration_cleaners(text)
             elif t == "jaconv":
                 text = jaconv.normalize(text)
             elif t == "vietnamese":

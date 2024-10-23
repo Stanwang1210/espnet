@@ -129,6 +129,7 @@ class FastSpeech2(AbsTTS):
         init_dec_alpha: float = 1.0,
         use_masking: bool = False,
         use_weighted_masking: bool = False,
+        discrete_token_layers: int = 1,
     ):
         """Initialize FastSpeech2 module.
 

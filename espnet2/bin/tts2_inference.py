@@ -3,6 +3,7 @@
 """Script to run the inference of text-to-speeech model."""
 
 import argparse
+import os
 import logging
 import shutil
 import sys
@@ -168,10 +169,10 @@ class Text2Speech:
             output_dict.update(duration=duration, focus_rate=focus_rate)
 
         # apply vocoder (discrete-to-wav)
-        input_feat = output_dict["feat_gen"].unsqueeze(1)
+        input_feat = output_dict["feat_gen"].unsqueeze(0)
 
         if self.vocoder is not None:
-            wav = self.vocoder(input_feat)
+            wav = self.vocoder.detokenize(input_feat).squeeze(0)
             output_dict.update(wav=wav)
 
         return output_dict
@@ -181,6 +182,8 @@ class Text2Speech:
         """Return sampling rate."""
         if hasattr(self.vocoder, "fs"):
             return self.vocoder.fs
+        elif hasattr(self.vocoder, "sample_rate"):
+            return self.vocoder.sample_rate
         elif hasattr(self.tts, "fs"):
             return self.tts.fs
         else:
@@ -270,7 +273,7 @@ class Text2Speech:
 
 @typechecked
 def inference(
-    output_dir: str,
+    output_dir: Union[Path, str],
     batch_size: int,
     dtype: str,
     ngpu: int,
@@ -362,6 +365,7 @@ def inference(
 
     # 6. Start for-loop
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "feats").mkdir(parents=True, exist_ok=True)
     (output_dir / "speech_shape").mkdir(parents=True, exist_ok=True)
     (output_dir / "wav").mkdir(parents=True, exist_ok=True)

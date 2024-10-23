@@ -105,7 +105,7 @@ def test(model, test_dataloader, criterion, logger, expdir):
         for utt, out, lab in zip(utt_id, output.argmax(dim=-1), label):
             test_output[utt] = {"label": lab.item(), "pred": out.item()}
     with open(expdir / "test_output.json", "w") as f:
-        json.dump(test_output, f)
+        json.dump(test_output, f, indent=4)
 
     test_acc = 0
     for k, v in test_output.items():
@@ -168,7 +168,7 @@ def main(
     dev_dataset = ESC50Dataset(dumpdir / f"esc50_dev_fold_{fold}")
     test_dataset = ESC50Dataset(dumpdir / f"esc50_test_fold_{fold}")
     codec_conf = config.get("codec_conf")
-    with open(dumpdir / "esc50_train/token_lists/codec_token_list", "r") as f:
+    with open(dumpdir / f"esc50_train_fold_{fold}/token_lists/codec_token_list", "r") as f:
         codec_token_list = f.readlines()
 
     embedding = CodecEmbedding(input_size=len(codec_token_list), **codec_conf)

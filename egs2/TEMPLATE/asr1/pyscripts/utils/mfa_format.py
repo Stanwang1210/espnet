@@ -226,7 +226,11 @@ def get_phoneme_durations(
     # Should use same frame formulation for both
     # STFT frames calculation: https://github.com/librosa/librosa/issues/1288
     # centered stft
-
+    logging.info("Total samples: %d", n_samples)
+    logging.info("Hop size: %d", hop_size)
+    logging.info("Sampling rate: %d", fs)
+    logging.info("Total frames: %d", int(n_samples / hop_size) + 1)
+    
     total_durations = int(n_samples / hop_size) + 1
     timing_frames = [int(timing * fs / hop_size) + 1 for timing in timings]
     durations = [
@@ -296,10 +300,12 @@ def make_durations(args):
                     .replace(args.corpus_dir.rstrip("/") + "/", "")
                     .replace(".lab", "")
                 )
+                logging.info("Processing %s", filename)
                 with open(lab_path) as lab_file:
                     original_text = lab_file.read()
                 tg_path = os.path.join(textgrid_dir, f"{filename}.json")
                 if not os.path.exists(tg_path):
+                    logging.warning("%s not exists ", tg_path)
                     logging.warning("There is no alignment for %s, skipping.", lab_path)
                     continue
                 with codecs.open(tg_path, "r", encoding="utf-8") as reader:
@@ -413,7 +419,8 @@ def make_labs(args):
         else:
             with open(dset / "wav.scp") as reader:
                 for line in reader:
-                    utt, src_file = line.strip().split(maxsplit=1)
+                    utt = line.strip().split()[0]
+                    src_file = line.strip().split()[2]
                     src_file = os.path.abspath(src_file)
                     try:
                         spk = utt2spk[utt]

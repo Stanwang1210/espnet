@@ -28,7 +28,7 @@ SECONDS=0
 . ./path.sh
 . ./cmd.sh
 
-stage=3
+stage=1
 stop_stage=3
 nj=8
 inference_nj=8
@@ -39,9 +39,9 @@ gen_dir=
 ref_dir=
 key_file=
 eval_wer=true
-eval_spk=true
+eval_spk=false
 eval_mos=true
-eval_spk_mos=true
+eval_spk_mos=false
 spk_config=conf/eval_spk.yaml
 mos_config=conf/eval_mos.yaml
 
@@ -59,17 +59,17 @@ log "$0 $*"
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     if ${eval_wer}; then
         # Use ESPnet builtin script
-        # ./scripts/utils/evaluate_asr.sh \
-        #     --whisper_tag ${whisper_tag} \
-        #     --whisper_dir ${whisper_dir} \
-        #     --cleaner ${cleaner} \
-        #     --hyp_cleaner ${hyp_cleaner} \
-        #     --inference_nj ${inference_nj} \
-        #     --nj ${nj} \
-        #     --gt_text ${ref_dir}/text \
-        #     --gpu_inference ${gpu_inference} \
-        #     --decode_options "{task: transcribe, language: ${lang}, beam_size: 1}" \
-        #     ${gen_dir}/wav.scp ${gen_dir}/scoring/eval_wer
+        ./scripts/utils/evaluate_asr.sh \
+            --whisper_tag ${whisper_tag} \
+            --whisper_dir ${whisper_dir} \
+            --cleaner ${cleaner} \
+            --hyp_cleaner ${hyp_cleaner} \
+            --inference_nj ${inference_nj} \
+            --nj ${nj} \
+            --gt_text ${ref_dir}/text \
+            --gpu_inference ${gpu_inference} \
+            --decode_options "{task: transcribe, language: ${lang}, beam_size: 1}" \
+            ${gen_dir}/wav.scp ${gen_dir}/scoring/eval_wer
         
         # convert to result json file
         ./pyscripts/utils/speechlm_convert_asr_result.py \
@@ -84,7 +84,7 @@ fi
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     # User VERSA
-    for eval_item in spk ; do
+    for eval_item in mos ; do
         eval_flag=eval_${eval_item}
         if ${!eval_flag}; then
             # (1) init

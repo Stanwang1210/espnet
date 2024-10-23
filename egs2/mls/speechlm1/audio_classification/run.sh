@@ -11,6 +11,7 @@ elif [ ${codec_choice} == "Audio_EnCodec" ]; then
     model_tag="espnet/mls-audioset_encodec_16k_360epoch"
 elif [ ${codec_choice} == "English_Soundstream" ]; then
     model_tag="espnet/mls-english_soundstream_16k"
+    config_file=audio_classification/conf/train_esc_english_soundstream.yaml
 elif [ ${codec_choice} == "Multi_Soundstream" ]; then
     config_file=audio_classification/conf/train_esc_multi_soundstream.yaml
     model_tag="espnet/mls-multi_soundstream_16k"

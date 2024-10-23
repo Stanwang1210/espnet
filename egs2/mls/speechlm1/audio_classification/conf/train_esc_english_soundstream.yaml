@@ -3,7 +3,7 @@ codec_conf:
     token_bias: 2
     patch_size: 8
     positional_dropout_rate: 0.1
-    hf_model_tag: espnet/mls-multi_soundstream_16k
+    hf_model_tag: espnet/mls-english_soundstream_16k
 
 encoder_conf:
   d_model: 512

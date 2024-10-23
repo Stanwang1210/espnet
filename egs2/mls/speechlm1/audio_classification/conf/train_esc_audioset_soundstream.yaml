@@ -27,7 +27,7 @@ optim_conf:
 
 scheduler: StepLR
 scheduler_conf:
-  step_size: 10 
+  step_size: 5 
   gamma: 0.9
 
 

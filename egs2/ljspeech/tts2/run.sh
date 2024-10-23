@@ -5,7 +5,7 @@ set -e
 set -u
 set -o pipefail
 
-train_set=tr_no_dev
+train_set=train
 train_dev=dev
 eval_set=eval1
 
@@ -19,12 +19,15 @@ teacher_dumpdir=teacher_dumpdir
 
 ./tts2.sh \
     --nj 16 \
+    --audio_format wav.ark \
     --inference_nj 16 \
     --fs 16000 --n_shift 320 --n_fft 1280 \
     --s3prl_upstream_name hubert \
     --feature_layer 6 \
     --feature_num_clusters 500 \
     --lang en \
+    --min_wav_duration 0.3 \
+    --max_wav_duration 30 \
     --teacher_dumpdir ${teacher_dumpdir} \
     --train_config conf/train_fastspeech2.yaml \
     --train_set ${train_set} \

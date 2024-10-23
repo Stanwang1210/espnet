@@ -225,6 +225,7 @@ def get_parser() -> argparse.ArgumentParser:
             None,
             "tacotron",
             "jaconv",
+            "transliteration_cleaners",
             "vietnamese",
             "korean_cleaner",
             "whisper_en",

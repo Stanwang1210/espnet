@@ -400,6 +400,7 @@ class TTSTask(AbsTask):
                 vocoder_file, vocoder_config_file
             )
             return vocoder.to(device)
-
+        
+        
         else:
             raise ValueError(f"{vocoder_file} is not supported format.")

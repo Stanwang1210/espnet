@@ -49,7 +49,7 @@ local_data_opts="" # Options to be passed to local/data.sh.
 feats_type=raw             # Input feature type.
 audio_format=flac          # Audio format: wav, flac, wav.ark, flac.ark  (only in feats_type=raw).
 min_wav_duration=0.1       # Minimum duration in second.
-max_wav_duration=30        # Maximum duration in second.
+max_wav_duration=20        # Maximum duration in second.
 use_sid=false              # Whether to use speaker id as the inputs (Need utt2spk in data directory).
 use_lid=false              # Whether to use language id as the inputs (Need utt2lang in data directory).
 fs=16000                   # Sampling rate.
@@ -315,11 +315,10 @@ if [ -z "${tts2_stats_dir}" ]; then
     if [ "${src_token_type}" = phn ]; then
         tts2_stats_dir+="_${g2p}"
     fi
-    tts2_stats_dir+="_${lang}_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 fi
 # The directory used for training commands
 if [ -z "${tts2_exp}" ]; then
-    tts2_exp="${expdir}/tts2_${tag}_${lang}_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
+    tts2_exp="${expdir}/tts2_${tag}"
 fi
 
 
@@ -352,7 +351,7 @@ if ! "${skip_data_prep}"; then
             fi
             utils/copy_data_dir.sh data/"${dset}" "${data_feats}${_suf}/${dset}"
             if [ -e "data/${dset}/durations" ]; then
-                cp "data/${dset}/durations" "${data_feats}${_suf}/${dset}/durations"
+                cp "data/${dset}/durations" "${data_feats}${_suf}/durations"
             fi
             rm -f ${data_feats}${_suf}/${dset}/{segments,wav.scp,reco2file_and_channel}
             _opts=
@@ -605,13 +604,8 @@ if ! "${skip_data_prep}"; then
 
     if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
         log "Stage 6: Discrete TTS discrete unit extraction"
-        if [ ${skip_train} ]; then
-            dsets="${test_sets}"
-        else 
-            dsets="${train_set} ${valid_set}" ${test_sets}
-        fi
 
-        for dset in ${dsets}; do
+        for dset in "${train_set}" "${valid_set}" ${test_sets}; do
             src_dir=${data_feats}/${dset}
             tgt_dir="${teacher_dumpdir}"/${dset}
             log "Copy data dir from ${src_dir} to ${tgt_dir}"
@@ -698,9 +692,11 @@ if ! "${skip_train}"; then
         _opts=
         if [ -n "${train_config}" ]; then
             # To generate the config file: e.g.
-            #   % python3 -m espnet2.bin.tts_train --print_config --optim adam
+            #   % python3 -m espnet2.bin.tts2_train --print_config --optim adam
             _opts+="--config ${train_config} "
         fi
+
+        _opts+="--write_collected_feats ${write_collected_feats} "
 
         _scp=wav.scp
         if [[ "${audio_format}" == *ark* ]]; then
@@ -709,29 +705,18 @@ if ! "${skip_train}"; then
             # "sound" supports "wav", "flac", etc.
             _type=sound
         fi
-        # feats_extract=fbank
-        # _opts+="--feats_extract ${feats_extract} "
-        # _opts+="--feats_extract_conf n_fft=${n_fft} "
-        # _opts+="--feats_extract_conf hop_length=${n_shift} "
-        # _opts+="--feats_extract_conf win_length=${win_length} "
-        # if [ "${feats_extract}" = fbank ]; then
-        #     _opts+="--feats_extract_conf fs=${fs} "
-        #     _opts+="--feats_extract_conf fmin=${fmin} "
-        #     _opts+="--feats_extract_conf fmax=${fmax} "
-        #     _opts+="--feats_extract_conf n_mels=${n_mels} "
-        # fi
 
         # Add extra configs for additional inputs
         # NOTE(kan-bayashi): We always pass this options but not used in default
-        # _opts+="--pitch_extract_conf fs=${fs} "
-        # _opts+="--pitch_extract_conf n_fft=${n_fft} "
-        # _opts+="--pitch_extract_conf hop_length=${n_shift} "
-        # _opts+="--pitch_extract_conf f0max=${f0max} "
-        # _opts+="--pitch_extract_conf f0min=${f0min} "
-        # _opts+="--energy_extract_conf fs=${fs} "
-        # _opts+="--energy_extract_conf n_fft=${n_fft} "
-        # _opts+="--energy_extract_conf hop_length=${n_shift} "
-        # _opts+="--energy_extract_conf win_length=${win_length} "
+        _opts+="--pitch_extract_conf fs=${fs} "
+        _opts+="--pitch_extract_conf n_fft=${n_fft} "
+        _opts+="--pitch_extract_conf hop_length=${n_shift} "
+        _opts+="--pitch_extract_conf f0max=${f0max} "
+        _opts+="--pitch_extract_conf f0min=${f0min} "
+        _opts+="--energy_extract_conf fs=${fs} "
+        _opts+="--energy_extract_conf n_fft=${n_fft} "
+        _opts+="--energy_extract_conf hop_length=${n_shift} "
+        _opts+="--energy_extract_conf win_length=${win_length} "
 
         if [ -n "${teacher_dumpdir}" ]; then
             _teacher_train_dir="${teacher_dumpdir}/${train_set}"
@@ -788,22 +773,24 @@ if ! "${skip_train}"; then
         log "Discrete TTS collect_stats started... log: '${_logdir}/stats.*.log'"
         # shellcheck disable=SC2046,SC2086
         ${train_cmd} JOB=1:"${_nj}" "${_logdir}"/stats.JOB.log \
-            ${python} -m "espnet2.bin.tts_train" \
+            ${python} -m "espnet2.bin.${tts2_task}_train" \
                 --collect_stats true \
                 --write_collected_feats "${write_collected_feats}" \
                 --use_preprocessor true \
-                --token_type "${src_token_type}" \
-                --token_list "${src_token_list}" \
+                --src_token_type "${src_token_type}" \
+                --src_token_list "${src_token_list}" \
+                --tgt_token_list "${tgt_token_list}" \
                 --non_linguistic_symbols "${nlsyms_txt}" \
                 --cleaner "${cleaner}" \
                 --g2p "${g2p}" \
-                --normalize none \
                 --pitch_normalize none \
                 --energy_normalize none \
                 --train_data_path_and_name_and_type "${_train_dir}/text,text,text" \
                 --train_data_path_and_name_and_type "${_train_dir}/${_scp},speech,${_type}" \
+                --train_data_path_and_name_and_type "${_train_dir}/wav_codec.scp,discrete_speech,kaldi_ark" \
                 --valid_data_path_and_name_and_type "${_valid_dir}/text,text,text" \
                 --valid_data_path_and_name_and_type "${_valid_dir}/${_scp},speech,${_type}" \
+                --valid_data_path_and_name_and_type "${_valid_dir}/wav_codec.scp,discrete_speech,kaldi_ark" \
                 --train_shape_file "${_logdir}/train.JOB.scp" \
                 --valid_shape_file "${_logdir}/valid.JOB.scp" \
                 --output_dir "${_logdir}/stats.JOB" \
@@ -828,14 +815,8 @@ if ! "${skip_train}"; then
 
 
     if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ]; then
-        if [ -n "${teacher_dumpdir}" ]; then
-            log "Teacher dumpdir exists. Use teacher_dumpdir=${teacher_dumpdir}"
-            _train_dir="${teacher_dumpdir}/${train_set}"
-            _valid_dir="${teacher_dumpdir}/${valid_set}"
-        else
-            _train_dir="${data_feats}/${train_set}"
-            _valid_dir="${data_feats}/${valid_set}"
-        fi
+        _train_dir="${data_feats}/${train_set}"
+        _valid_dir="${data_feats}/${valid_set}"
         log "Stage 8: Discrete TTS Training: train_set=${_train_dir}, valid_set=${_valid_dir}"
 
         _opts=
@@ -1059,7 +1040,6 @@ if ! "${skip_eval}"; then
         _opts=
         if [ -n "${inference_config}" ]; then
             _opts+="--config ${inference_config} "
-            _opts+="--vocoder_config_file ${inference_config} "
         fi
 
         log "Generate '${tts2_exp}/${inference_tag}/run.sh'. You can resume the process from stage 9 using this script"
@@ -1175,36 +1155,17 @@ if ! "${skip_eval}"; then
                 done
             fi
         done
-
-        
     fi
 else
     log "Skip the evaluation stages"
 fi
-if [ ${stage} -le 10 ] && [ ${stop_stage} -ge 10 ]; then
-    log "Stage 10: Start evaluation"
-    for dset in ${test_sets}; do
-        _dir="${tts2_exp}/${inference_tag}/${dset}"
-        wavdir="${_dir}/wav"
-        dset_text=data/$(echo ${dset} | sed 's/_phn//')
-        log "Evaluation started... log: ${wavdir}"
-        ./scripts/utils/speechlm_eval/eval_tts.sh \
-        --gen_dir ${wavdir} \
-        --ref_dir ${dset_text} \
-        --key_file ${_dir}/eval_cache/key_file \
-        --nj 2 \
-        --lang ${lang} \
-        --inference_nj 2 \
-        --gpu_inference ${gpu_inference} \
-        --nbest 1
-    done
-fi
+
 
 packed_model="${tts2_exp}/${tts2_exp##*/}_${inference_model%.*}.zip"
 if [ -z "${download_model}" ]; then
     # Skip pack preparation if using a downloaded model
-    if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ]; then
-        log "Stage 11: Pack model: ${packed_model}"
+    if [ ${stage} -le 10 ] && [ ${stop_stage} -ge 10 ]; then
+        log "Stage 10: Pack model: ${packed_model}"
         log "Warning: Upload model to Zenodo will be deprecated. We encourage to use Hugging Face"
 
         _opts=""
@@ -1221,7 +1182,7 @@ if [ -z "${download_model}" ]; then
             _opts+=" --option ${data_feats}/org/${train_set}/lang2lid"
         fi
 
-	    _km_dir="${km_dir}/${s3prl_upstream_name}_layer6${feature_layer}_${feature_num_clusters}"
+	_km_dir="${km_dir}/${s3prl_upstream_name}_layer6${feature_layer}_${feature_num_clusters}"
         _opts+=" --option ${_km_dir}/km_${feature_num_clusters}.mdl "
         ${python} -m espnet2.bin.pack tts2 \
             --train_config "${tts2_exp}"/config.yaml \

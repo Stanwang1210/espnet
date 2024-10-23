@@ -128,6 +128,7 @@ if [ -z "${g2p_model}" ]; then
 fi
 
 mkdir -p "${workdir}"
+workdir=$(realpath "${workdir}")
 tempdir="${workdir}/tmp"
 corpus_dir="${workdir}/corpus"
 oov_dict="${workdir}/oov_corpus.dict"
@@ -137,9 +138,9 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     log "Stage 0: Data preparation for ${split_sets}"
     local/data.sh ${local_data_opts}
 fi
-
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     log "stage 1: Prepare Data set for MFA"
+    python remove_punctuation.py 
     # Text cleaning and save it in wav/lab files (by file)
     python pyscripts/utils/mfa_format.py labs \
                                     --data_sets "${split_sets}" \

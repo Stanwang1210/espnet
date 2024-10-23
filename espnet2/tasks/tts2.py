@@ -338,6 +338,16 @@ class TTS2Task(AbsTask):
                 vocoder_file, vocoder_config_file
             )
             return vocoder.to(device)
+        elif str(vocoder_file).startswith("espnet"):
+            # ESPnet Codec
+            from espnet2.speechlm.tokenizer.codec_tokenizer import CodecTokenizer
+            
+            return CodecTokenizer(
+                codec_choice="ESPnet",
+                codec_fs=16000,
+                device=device,
+                hf_model_tag=vocoder_file,
+            )
 
         else:
             raise ValueError(f"{vocoder_file} is not supported format.")
