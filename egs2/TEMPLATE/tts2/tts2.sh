@@ -38,7 +38,7 @@ num_nodes=1          # The number of nodes.
 nj=32                # The number of parallel jobs.
 inference_nj=32      # The number of parallel jobs in decoding.
 gpu_inference=false  # Whether to perform gpu decoding.
-dumpdir=dump         # Directory to dump features.
+dumpdir=dump_audio         # Directory to dump features.
 expdir=exp           # Directory to save experiments.
 python=python3       # Specify python to execute espnet commands.
 
@@ -250,6 +250,7 @@ fi
 
 # Check feature type
 if [ "${feats_type}" = raw ]; then
+    log "dumpdir ${dumpdir}"
     data_feats="${dumpdir}/raw"
     teacher_dumpdir="${data_feats}_${codec_choice}_$(echo ${codec_hf_model_tag} | tr '/' '_')"
 else
@@ -605,12 +606,14 @@ if ! "${skip_data_prep}"; then
 
     if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
         log "Stage 6: Discrete TTS discrete unit extraction"
-        if [ ${skip_train} ]; then
-            dsets="${test_sets}"
+        log "skip train ${skip_train}"
+        if [ "${skip_train}" = false ]; then
+            log "skip"
+            dsets="${train_set} ${valid_set} ${test_sets}"
         else 
-            dsets="${train_set} ${valid_set}" ${test_sets}
+            dsets="${test_sets}"
         fi
-
+        log "dset is ${dsets}"
         for dset in ${dsets}; do
             src_dir=${data_feats}/${dset}
             tgt_dir="${teacher_dumpdir}"/${dset}
@@ -709,17 +712,17 @@ if ! "${skip_train}"; then
             # "sound" supports "wav", "flac", etc.
             _type=sound
         fi
-        # feats_extract=fbank
-        # _opts+="--feats_extract ${feats_extract} "
-        # _opts+="--feats_extract_conf n_fft=${n_fft} "
-        # _opts+="--feats_extract_conf hop_length=${n_shift} "
-        # _opts+="--feats_extract_conf win_length=${win_length} "
-        # if [ "${feats_extract}" = fbank ]; then
-        #     _opts+="--feats_extract_conf fs=${fs} "
-        #     _opts+="--feats_extract_conf fmin=${fmin} "
-        #     _opts+="--feats_extract_conf fmax=${fmax} "
-        #     _opts+="--feats_extract_conf n_mels=${n_mels} "
-        # fi
+        feats_extract=fbank
+        _opts+="--feats_extract ${feats_extract} "
+        _opts+="--feats_extract_conf n_fft=${n_fft} "
+        _opts+="--feats_extract_conf hop_length=${n_shift} "
+        _opts+="--feats_extract_conf win_length=${win_length} "
+        if [ "${feats_extract}" = fbank ]; then
+            _opts+="--feats_extract_conf fs=${fs} "
+            _opts+="--feats_extract_conf fmin=${fmin} "
+            _opts+="--feats_extract_conf fmax=${fmax} "
+            _opts+="--feats_extract_conf n_mels=${n_mels} "
+        fi
 
         # Add extra configs for additional inputs
         # NOTE(kan-bayashi): We always pass this options but not used in default

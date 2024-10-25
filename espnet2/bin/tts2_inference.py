@@ -88,6 +88,7 @@ class Text2Speech:
         self.duration_calculator = DurationCalculator()
         self.preprocess_fn = TTS2Task.build_preprocess_fn(train_args, False)
         self.use_teacher_forcing = use_teacher_forcing
+        logging.info(f"teacher_forcing: {self.use_teacher_forcing}")
         self.seed = seed
         self.always_fix_seed = always_fix_seed
 
