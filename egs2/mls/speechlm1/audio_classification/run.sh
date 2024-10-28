@@ -32,8 +32,8 @@ echo ${config_file}
 
 which python
 
-for fold in 1 2 3 4 5; do
-    expdir=exp_esc/${exptag}/fold_${fold}
+for fold in 1; do
+    expdir=exp_esc_pretrained/${exptag}/fold_${fold}
     echo ${expdir}
     mkdir -p ${expdir}
     cp ${config_file} ${expdir}/config.yaml
@@ -43,5 +43,6 @@ for fold in 1 2 3 4 5; do
     --dumpdir ${dumpdir} \
     --exp_dir ${expdir} \
     --fold ${fold}  &
+    echo "python audio_classification/run.py --config_file ${config_file} --model_tag ${model_tag} --dumpdir ${dumpdir} --exp_dir ${expdir} --fold ${fold}"
 done
 wait

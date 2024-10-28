@@ -15,7 +15,7 @@ from espnet2.speechlm.tokenizer.codec_tokenizer import CodecTokenizer
 from espnet2.mt.frontend.embedding import CodecEmbedding
 from espnet2.torch_utils.model_summary import model_summary
 
-from model import ESC50Model
+from model import ESC50Model, PretrainedESC50Model
 from dataset import ESC50Dataset, get_dataloader
 from utils import set_seed, draw
 
@@ -172,7 +172,7 @@ def main(
         codec_token_list = f.readlines()
 
     embedding = CodecEmbedding(input_size=len(codec_token_list), **codec_conf)
-    model = ESC50Model(config, embedding)
+    model = PretrainedESC50Model(config, embedding)
     logger.info(model_summary(model))
     model.to(device)
 
